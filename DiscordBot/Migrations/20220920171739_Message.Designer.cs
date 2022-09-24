@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace DiscordBot.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(DataContext))]
     [Migration("20220920171739_Message")]
     partial class Message
     {
