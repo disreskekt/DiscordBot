@@ -5,9 +5,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using IResult = Discord.Commands.IResult;
+using SummaryAttribute = Discord.Commands.SummaryAttribute;
 
 namespace DiscordBot;
 
@@ -18,13 +21,15 @@ public class CommandHandler
     
     private readonly DiscordSocketClient _client;
     private readonly CommandService _commands;
+    private readonly InteractionService _interactionService;
     private readonly IServiceProvider _serviceProvider;
     private readonly Dictionary<string, string> _commandToMethod;
 
-    public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider serviceProvider)
+    public CommandHandler(DiscordSocketClient client, CommandService commands, InteractionService interactionService, IServiceProvider serviceProvider)
     {
         _client = client;
         _commands = commands;
+        _interactionService = interactionService;
         _serviceProvider = serviceProvider;
         _commandToMethod = new Dictionary<string, string>();
     }
@@ -35,7 +40,8 @@ public class CommandHandler
         
         _client.MessageReceived += HandleCommandAsync;
         _client.Ready += ClientReady;
-        _client.SlashCommandExecuted += SlashCommandHandler;
+        // _client.SlashCommandExecuted += SlashCommandHandler;
+        _client.InteractionCreated += HandleInteractionAsync;
     }
 
     private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -55,11 +61,14 @@ public class CommandHandler
         
         SocketCommandContext context = new SocketCommandContext(_client, message);
         
-        IResult result = await _commands.ExecuteAsync(
-            context: context,
-            argPos: argPos,
-            services: _serviceProvider
-        );
+        IResult result = await _commands.ExecuteAsync(context, argPos, _serviceProvider);
+    }
+    
+    private async Task HandleInteractionAsync(SocketInteraction interaction)
+    {
+        SocketInteractionContext context = new SocketInteractionContext(_client, interaction);
+        
+        Discord.Interactions.IResult result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
     }
 
     private async Task ClientReady()
@@ -109,6 +118,8 @@ public class CommandHandler
         }
 
         Commands.AddDbContextAccessor((_serviceProvider.GetService(typeof(IDbContextAccessor)) as IDbContextAccessor)!);
+        
+        await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
     }
 
     private async Task SlashCommandHandler(SocketSlashCommand command)
@@ -121,7 +132,7 @@ public class CommandHandler
         }
         
         DsMessage dsMessage = new DsMessage(command.CommandName, command.Channel, command.User, Array.Empty<Attachment>());
-        DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.Author, _client.GetGuild(command.GuildId.Value));
+        DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, _client.GetGuild(command.GuildId.Value));
         
         string commandName = command.Data.Name;
         string methodName = _commandToMethod[commandName];
@@ -150,40 +161,8 @@ public interface IDsContext
 
 public interface IDsMessage
 {
-    public string Content { get; set; }
-    public ISocketMessageChannel Channel { get; }
-    public SocketUser Author { get; }
-    public IReadOnlyCollection<Attachment> Attachments { get; }
-}
-
-public class DsContext : IDsContext
-{
-    public DsContext(IDsMessage message, ISocketMessageChannel channel, SocketUser user, SocketGuild guild)
-    {
-        this.Message = message;
-        this.Channel = channel;
-        this.User = user;
-        this.Guild = guild;
-    }
-
-    public IDsMessage Message { get; }
+    public string Token { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
-    public SocketGuild Guild { get; }
-}
-
-public class DsMessage : IDsMessage
-{
-    public string Content { get; set; }
-    public ISocketMessageChannel Channel { get; }
-    public SocketUser Author { get; }
     public IReadOnlyCollection<Attachment> Attachments { get; }
-    public DsMessage(string content, ISocketMessageChannel channel, SocketUser author, IReadOnlyCollection<Attachment> attachments)
-    {
-        this.Content = content;
-        this.Channel = channel;
-        this.Author = author;
-        this.Attachments = attachments;
-    }
-    
 }

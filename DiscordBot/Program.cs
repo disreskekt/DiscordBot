@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,7 @@ namespace DiscordBot
                 .AddSingleton<CommandServiceConfig>(_ => commandConfig)
                 .AddSingleton<DiscordSocketClient>(_ => new DiscordSocketClient(config))
                 .AddSingleton<CommandService>(_ => new CommandService(commandConfig))
+                .AddSingleton<InteractionService>()
                 .AddSingleton<CommandHandler>()
                 .AddDbContext<DataContext>(options => options.UseNpgsql(CONNECTION_STRING))
                 .AddSingleton<IDbContextAccessor, ServiceProviderDbContextAccessor>()

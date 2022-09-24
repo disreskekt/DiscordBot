@@ -12,26 +12,21 @@ public static class PlayingService
     private static AudioOutStream? TargetStream { get; set; }
     public static bool PlayingStatus { get; set; }
     
-    public static void ChangeChannel()
+    public static void ChangeChannel(IAudioClient audioClient)
     {
-        
+        TargetStream = audioClient.CreatePCMStream(AudioApplication.Mixed);
     }
 
-    public static async Task ForcePlay(IAudioClient audioClient)
+    public static async Task ForcePlay()
     {
         if (!PlayingStatus)
         {
-            await Play(Queue.Dequeue(), audioClient);
+            await Play(Queue.Dequeue());
         }
     }
     
-    public static async Task Play(string songName, IAudioClient audioClient)
+    public static async Task Play(string songName)
     {
-        if (TargetStream is null)
-        {
-            TargetStream = audioClient.CreatePCMStream(AudioApplication.Voice);
-        }
-        
         Mp3FileReader mp3FileReader = GetSongStream(songName);
         
         try
@@ -49,7 +44,7 @@ public static class PlayingService
         try
         {
             string nextSongName = Queue.Dequeue();
-            await Play(nextSongName, audioClient);
+            await Play(nextSongName);
         }
         catch
         {

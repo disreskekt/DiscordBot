@@ -32,13 +32,7 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         await PreparingToExecuteCommand(context.Message, db);
         
-        const string helpMessage = @"Короче можно
--add *ссылка на тенор гифку*
--add + прикрепленный контент
--gif даст рандомную гифку из базы
--image даст рандомную пикчу из базы
--any даст рандомную хуйню из базы
-Других типов я пока в базу не добавил, мне впадлу, но если скинете в бота новый контент, то он по идее должен регнуться и запомниться, а я потом добавлю команду чтобы достать ваш кал";
+        const string helpMessage = @"Ахахаха пашол нахуй пидар";
         
         await db.SaveChangesAsync();
 
@@ -55,7 +49,7 @@ public class Commands
             return null;
         }
 
-        string text = context.Message.Content;
+        string text = context.Message.Token;
         switch (text)
         {
             case not null when text.StartsWith("add https://tenor.com/view/"):
@@ -114,50 +108,40 @@ public class Commands
     
     public static async Task<string> Harosh(IDsContext context)
     {
-        await PlaySound("харош", context);
-
-        return POSTAVIL;
+        return await PlaySound("харош", context);
     }
     
     public static async Task<string> Megaharosh(IDsContext context)
     {
-        await PlaySound("мегахарош", context);
-
-        return POSTAVIL;
+        return await PlaySound("мегахарош", context);
     }
     
     public static async Task<string> ChelHarosh(IDsContext context)
     {
-        await PlaySound("челхарош", context);
-
-        return POSTAVIL;
+        return await PlaySound("челхарош", context);
     }
     
     public static async Task<string> Ahuitelen(IDsContext context)
     {
-        await PlaySound("ахуителен", context);
-
-        return POSTAVIL;
+        return await PlaySound("ахуителен", context);
     }
     
     public static async Task<string> Ploh(IDsContext context)
     {
-        await PlaySound("плох", context);
-
-        return POSTAVIL;
+        return await PlaySound("плох", context);
     }
 
     private static async Task<User?> PreparingToExecuteCommand(IDsMessage message, DataContext db)
     {
-        User? user = await db.Users.FindAsync(message.Author.Id);
+        User? user = await db.Users.FindAsync(message.User.Id);
 
         if (user is not null)
         {
-            CheckUsernameCondition(message.Author.Username, db, user);
+            CheckUsernameCondition(message.User.Username, db, user);
         }
         else
         {
-            user = CreateUser(message.Author, db);
+            user = CreateUser(message.User, db);
         }
                 
         if (user.Banned)
@@ -182,9 +166,9 @@ public class Commands
         
         db.Messages.Add(new Message
         {
-            MessageText = message.Content,
+            MessageText = message.Token,
             SentDate = DateTime.Now,
-            UserId = message.Author.Id
+            UserId = message.User.Id
         });
 
         return user;
@@ -332,7 +316,7 @@ public class Commands
         return db.Contents.Where(c => c.ContentTypeId == contentType.Id).Select(c => c.ContentSource).Skip(next - 1).First();
     }
     
-    private static async Task PlaySound(string songName, IDsContext context)
+    private static async Task<string> PlaySound(string songName, IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         await PreparingToExecuteCommand(context.Message, db);
@@ -344,8 +328,7 @@ public class Commands
 
         if (voiceChannel is null)
         {
-            await context.Channel.SendMessageAsync("Ты не в войсе");
-            return;
+            return "Ты не в войсе";
         }
 
         VoiceChannelStatus voiceChannelStatus = GuildsHelper.GetOrSet(context.Guild.Id);
@@ -355,6 +338,7 @@ public class Commands
         if (isChanged)
         {
             audioClient = await voiceChannel.ConnectAsync();
+            PlayingService.ChangeChannel(audioClient);
             voiceChannelStatus.ChannelsClient.AddOrChangeValue(voiceChannel.Id, audioClient);
         }
         else
@@ -364,6 +348,8 @@ public class Commands
 
         PlayingService.Queue.Enqueue(songName);
 
-        await PlayingService.ForcePlay(audioClient);
+        Task.Run(() => PlayingService.ForcePlay());
+
+        return POSTAVIL;
     }
 }
