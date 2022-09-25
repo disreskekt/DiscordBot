@@ -23,7 +23,6 @@ public class CommandHandler
     private readonly CommandService _commands;
     private readonly InteractionService _interactionService;
     private readonly IServiceProvider _serviceProvider;
-    private readonly Dictionary<string, string> _commandToMethod;
 
     public CommandHandler(DiscordSocketClient client, CommandService commands, InteractionService interactionService, IServiceProvider serviceProvider)
     {
@@ -31,7 +30,6 @@ public class CommandHandler
         _commands = commands;
         _interactionService = interactionService;
         _serviceProvider = serviceProvider;
-        _commandToMethod = new Dictionary<string, string>();
     }
 
     public async Task InstallCommandsAsync()
@@ -91,7 +89,6 @@ public class CommandHandler
                 {
                     case CommandAttribute commandAttribute:
                         guildCommand.WithName(commandAttribute.Text);
-                        _commandToMethod.Add(commandAttribute.Text, method.Name);
                         break;
                     case SummaryAttribute summaryAttribute:
                         guildCommand.WithDescription(summaryAttribute.Text);
@@ -120,34 +117,6 @@ public class CommandHandler
         Commands.AddDbContextAccessor((_serviceProvider.GetService(typeof(IDbContextAccessor)) as IDbContextAccessor)!);
         
         await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
-    }
-
-    private async Task SlashCommandHandler(SocketSlashCommand command)
-    {
-        if (command.GuildId is null)
-        {
-            await command.RespondAsync("Пока только в гильдиях работает");
-
-            return;
-        }
-        
-        DsMessage dsMessage = new DsMessage(command.CommandName, command.Channel, command.User, Array.Empty<Attachment>());
-        DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, _client.GetGuild(command.GuildId.Value));
-        
-        string commandName = command.Data.Name;
-        string methodName = _commandToMethod[commandName];
-        
-        Commands commands = new Commands();
-        
-        MethodInfo method = typeof(Commands).GetMethod(methodName)!;
-        Task invoked = (Task) method.Invoke(commands, new object?[] {dsContext})!;
-        
-        await invoked.ConfigureAwait(false);
-        
-        PropertyInfo? resultProperty = invoked.GetType().GetProperty("Result");
-        object? result = resultProperty?.GetValue(invoked);
-        
-        await command.RespondAsync((string) result!);
     }
 }
 
