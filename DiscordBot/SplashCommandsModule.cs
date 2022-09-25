@@ -45,7 +45,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("help", "Объясняет для тупых")]
     public async Task Help()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string helpMessage = await Commands.Help(dsContext);
         await this.Context.Interaction.RespondAsync(helpMessage);
@@ -54,7 +55,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("add", "Добавляет контент в базу")]
     public async Task Add()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string? addMessage = await Commands.Add(dsContext);
         if (addMessage is null)
@@ -67,7 +69,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("any", "Достает из базы рандомный контент")]
     public async Task Any()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string anyMessage = await Commands.Any(dsContext);
         await this.Context.Interaction.RespondAsync(anyMessage);
@@ -76,7 +79,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("gif", "Достает из базы рандомную гифку")]
     public async Task Gif()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string gifMessage = await Commands.Gif(dsContext);
         await this.Context.Interaction.RespondAsync(gifMessage);
@@ -85,7 +89,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("image", "Достает из базы рандомную картинку")]
     public async Task Image()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string imageMessage = await Commands.Image(dsContext);
         await this.Context.Interaction.RespondAsync(imageMessage);
@@ -94,7 +99,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("харош", "Харош)", false, Discord.Interactions.RunMode.Async)]
     public async Task Harosh()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Harosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -103,7 +109,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("мегахарош", "Мегахарош)", false, Discord.Interactions.RunMode.Async)]
     public async Task Megaharosh()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Megaharosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -112,7 +119,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("челхарош", "Чел харош)", false, Discord.Interactions.RunMode.Async)]
     public async Task ChelHarosh()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.ChelHarosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -121,7 +129,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("ахуителен", "Ахуителен)", false, Discord.Interactions.RunMode.Async)]
     public async Task Ahuitelen()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Ahuitelen(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -130,7 +139,8 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     [SlashCommand("плох", "Плох(", false, Discord.Interactions.RunMode.Async)]
     public async Task Ploh()
     {
-        DsMessage dsMessage = new DsMessage(this.Context.Interaction.Token, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Ploh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
