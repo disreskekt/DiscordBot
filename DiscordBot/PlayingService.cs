@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Discord.Audio;
 using NAudio.Wave;
@@ -14,7 +17,7 @@ public static class PlayingService
     
     public static void ChangeChannel(IAudioClient audioClient)
     {
-        TargetStream = audioClient.CreatePCMStream(AudioApplication.Mixed);
+        TargetStream = audioClient.CreatePCMStream(AudioApplication.Music);
     }
 
     public static async Task ForcePlay()
@@ -25,9 +28,9 @@ public static class PlayingService
         }
     }
     
-    public static async Task Play(string songName)
+    public static async Task Play(string songSource)
     {
-        Mp3FileReader mp3FileReader = GetSongStream(songName);
+        (Mp3FileReader mp3FileReader, MemoryStream memoryStream) = await GetSongStream(songSource);
         
         try
         {
@@ -39,6 +42,7 @@ public static class PlayingService
         {
             await TargetStream.FlushAsync();
             await mp3FileReader.DisposeAsync();
+            await memoryStream.DisposeAsync();
         }
 
         try
@@ -52,10 +56,15 @@ public static class PlayingService
         }
     }
     
-    private static Mp3FileReader GetSongStream(string songName)
+    private static async Task<(Mp3FileReader, MemoryStream)> GetSongStream(string songSource)
     {
-        string soundFullPath = SOUNDS_PATH + songName.ToLowerInvariant() + ".mp3";
+        using (WebClient client = new WebClient())
+        {
+            byte[] downloadData = client.DownloadData(songSource);
 
-        return new Mp3FileReader(soundFullPath);
+            MemoryStream memoryStream = new MemoryStream(downloadData);
+            
+            return (new Mp3FileReader(memoryStream), memoryStream);
+        }
     }
 }

@@ -19,13 +19,13 @@ public class ModuleDsContext : SocketCommandContext, IDsContext
 
 public class ModuleDsMessage : IDsMessage
 {
-    public string Token { get; set; }
+    public string MessageText { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
     public IReadOnlyCollection<Attachment> Attachments { get; }
-    public ModuleDsMessage(string content, ISocketMessageChannel channel, SocketUser author, IReadOnlyCollection<Attachment> attachments)
+    public ModuleDsMessage(string messageText, ISocketMessageChannel channel, SocketUser author, IReadOnlyCollection<Attachment> attachments)
     {
-        this.Token = content;
+        this.MessageText = messageText;
         this.Channel = channel;
         this.User = author;
         this.Attachments = attachments;
@@ -82,6 +82,15 @@ public class Module : ModuleBase<SocketCommandContext>
         ModuleDsContext context = new ModuleDsContext(this.Context);
         string imageMessage = await Commands.Image(context);
         await this.Context.Channel.SendMessageAsync(imageMessage);
+    }
+    
+    [Command("song", RunMode = RunMode.Async)]
+    [Summary("Достает из базы рандомную песню")]
+    public async Task Song(string? song = null)
+    {
+        ModuleDsContext context = new ModuleDsContext(this.Context);
+        string audioMessage = await Commands.Song(context, song);
+        await this.Context.Channel.SendMessageAsync(audioMessage);
     }
     
     [Command("харош", RunMode = RunMode.Async)]

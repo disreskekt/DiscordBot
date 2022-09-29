@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -9,6 +11,7 @@ using DiscordBot.Helpers;
 using DiscordBot.Helpers.Extensions;
 using DiscordBot.Models;
 using Microsoft.EntityFrameworkCore;
+using NAudio.Wave;
 
 namespace DiscordBot;
 
@@ -49,7 +52,7 @@ public class Commands
             return null;
         }
 
-        string text = context.Message.Token;
+        string text = context.Message.MessageText;
         switch (text)
         {
             case not null when text.StartsWith("add https://tenor.com/view/"):
@@ -57,13 +60,16 @@ public class Commands
                 string tenorLink = text.Substring(indexOfWhitespace + 1);
                 await AddTenorGif(tenorLink, user, db);
                 break;
-            case "add" when context.Message.Attachments.Count > 0:
+            case "-add" when context.Message.Attachments.Count > 0:
                 await AddNewContentTypes(context.Message.Attachments, db);
                 await AddAttachments(context.Message.Attachments, user, db);
                 break;
             // case "add":
             //     await message.Channel.SendMessageAsync("Ну может ты что-нибудь прикрепишь?");
             //     break;
+            default:
+                await db.SaveChangesAsync();
+                return "Неизвестная команда лол";
         }
         
         await db.SaveChangesAsync();
@@ -87,7 +93,7 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         await PreparingToExecuteCommand(context.Message, db);
         
-        string gifContentSource = await GetContentSource(db, 1);
+        string gifContentSource = await GetContentSource(db, null, "image/gif");
         
         await db.SaveChangesAsync();
 
@@ -99,36 +105,77 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         await PreparingToExecuteCommand(context.Message, db);
         
-        string imageContentSource = await GetContentSource(db, 2);
+        string imageContentSource = await GetContentSource(db, null, "image/png", "image/jpeg");
         
         await db.SaveChangesAsync();
 
         return imageContentSource;
     }
+
+    public static async Task<string> Song(IDsContext context, string? songName = null)
+    {
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, songName, "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
+    }
     
     public static async Task<string> Harosh(IDsContext context)
     {
-        return await PlaySound("харош", context);
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, "harosh", "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
     }
     
     public static async Task<string> Megaharosh(IDsContext context)
     {
-        return await PlaySound("мегахарош", context);
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, "megaharosh", "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
     }
     
     public static async Task<string> ChelHarosh(IDsContext context)
     {
-        return await PlaySound("челхарош", context);
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, "chelharosh", "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
     }
     
     public static async Task<string> Ahuitelen(IDsContext context)
     {
-        return await PlaySound("ахуителен", context);
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, "ahuitelen", "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
     }
     
     public static async Task<string> Ploh(IDsContext context)
     {
-        return await PlaySound("плох", context);
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        string audioContentSource = await GetContentSource(db, "ploh", "audio/mpeg");
+
+        return await SetSong(context, audioContentSource);
     }
 
     private static async Task<User?> PreparingToExecuteCommand(IDsMessage message, DataContext db)
@@ -166,7 +213,7 @@ public class Commands
         
         db.Messages.Add(new Message
         {
-            MessageText = message.Token,
+            MessageText = message.MessageText,
             SentDate = DateTime.Now,
             UserId = message.User.Id
         });
@@ -294,26 +341,33 @@ public class Commands
         return db.Contents.Select(c => c.ContentSource).Skip(next - 1).First();
     }
         
-    private static async Task<string> GetContentSource(DataContext db, int contentTypeId) //todo насрал повторов
+    private static async Task<string> GetContentSource(DataContext db, string? contentName = null, params string[] contentNames)
     {
-        ContentType? contentType = await db.ContentTypes.FindAsync(contentTypeId);
-
-        if (contentType is null)
+        List<int> contentTypeIds = db.ContentTypes.Where(ct => contentNames.Contains(ct.Name)).Select(ct => ct.Id).ToList();
+        
+        if (contentTypeIds is null || !contentTypeIds.Any())
         {
-            throw new PublicException("Базу дропнул, а хардкод не переписал лошок))");
+            throw new PublicException("Нет таких контент тайпов лох");
         }
-            
-        int typedContentCount = await db.Contents.Where(c => c.ContentTypeId == contentType.Id).CountAsync();
+        
+        IQueryable<Content> typedContents = db.Contents.Where(c => contentTypeIds.Contains(c.ContentTypeId));
 
+        if (contentName is not null)
+        {
+            typedContents = typedContents.Where(c => c.ContentSource.EndsWith("/" + contentName + ".mp3"));
+        }
+        
+        int typedContentCount = await typedContents.CountAsync();
+        
         if (typedContentCount < 1)
         {
             throw new PublicException("Сука нет контента");
         }
-            
+        
         Random random = new Random();
         int next = random.Next(1, typedContentCount + 1);
-            
-        return db.Contents.Where(c => c.ContentTypeId == contentType.Id).Select(c => c.ContentSource).Skip(next - 1).First();
+        
+        return typedContents.Select(c => c.ContentSource).Skip(next - 1).First();
     }
     
     private static async Task<string> PlaySound(string songName, IDsContext context)
@@ -322,6 +376,12 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
 
+        // return await SetSong(db, context, audiContentSource);
+        return "";
+    }
+
+    private static async Task<string> SetSong(IDsContext context, string audiContentSource)
+    {
         IGuildUser? guildUser = context.User as IGuildUser;
         IAudioClient? audioClient;
         IVoiceChannel? voiceChannel = guildUser?.VoiceChannel;
@@ -345,11 +405,11 @@ public class Commands
         {
             audioClient = voiceChannelStatus.ChannelsClient[voiceChannel.Id];
         }
-
-        PlayingService.Queue.Enqueue(songName);
-
+        
+        PlayingService.Queue.Enqueue(audiContentSource);
+        
         Task.Run(() => PlayingService.ForcePlay());
-
+        
         return POSTAVIL;
     }
 }

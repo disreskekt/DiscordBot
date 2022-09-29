@@ -130,7 +130,7 @@ public interface IDsContext
 
 public interface IDsMessage
 {
-    public string Token { get; set; }
+    public string MessageText { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
     public IReadOnlyCollection<Attachment> Attachments { get; }
