@@ -45,4 +45,21 @@ public class VoiceChannelStatus
             return true;
         }
     }
+
+    public ulong? FindActualChannel()
+    {
+        KeyValuePair<ulong, bool> kvp = this.IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
+        
+        if (!kvp.Equals(new KeyValuePair<ulong, bool>()))
+        {
+            return kvp.Key;
+        }
+
+        return null;
+    }
+
+    public void LeaveChannel(ulong channelId)
+    {
+        this.IsConnectedTo[channelId] = false;
+    }
 }

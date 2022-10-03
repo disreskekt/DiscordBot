@@ -8,8 +8,10 @@ using Discord.Commands;
 using Discord.Interactions;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Helpers.Extensions;
 using Newtonsoft.Json;
 using IResult = Discord.Commands.IResult;
+using ParameterInfo = System.Reflection.ParameterInfo;
 using SummaryAttribute = Discord.Commands.SummaryAttribute;
 
 namespace DiscordBot;
@@ -36,9 +38,10 @@ public class CommandHandler
     {
         await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
         
+        Commands.AddDbContextAccessor((_serviceProvider.GetService(typeof(IDbContextAccessor)) as IDbContextAccessor)!);
+        
         _client.MessageReceived += HandleCommandAsync;
         _client.Ready += ClientReady;
-        // _client.SlashCommandExecuted += SlashCommandHandler;
         _client.InteractionCreated += HandleInteractionAsync;
     }
 
@@ -74,7 +77,7 @@ public class CommandHandler
         SocketGuild? ourGuild = _client.GetGuild(OUR_GUILD);
         SocketGuild? myGuild = _client.GetGuild(MY_GUILD);
         
-        MethodInfo[] methods = typeof(Module).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        MethodInfo[] methods = typeof(SplashCommandsModule).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
         SlashCommandProperties[] commands = new SlashCommandProperties[methods.Length];
         for (int i = 0; i < methods.Length; i++)
         {
@@ -87,13 +90,19 @@ public class CommandHandler
             {
                 switch (attribute)
                 {
-                    case CommandAttribute commandAttribute:
-                        guildCommand.WithName(commandAttribute.Text);
-                        break;
-                    case SummaryAttribute summaryAttribute:
-                        guildCommand.WithDescription(summaryAttribute.Text);
+                    case SlashCommandAttribute slashCommandAttribute:
+                        guildCommand.WithName(slashCommandAttribute.Name);
+                        guildCommand.WithDescription(slashCommandAttribute.Description);
                         break;
                 }
+            }
+            
+            ParameterInfo[] parameters = method.GetParameters();
+
+            foreach (ParameterInfo parameter in parameters)
+            {
+                guildCommand.AddOption(parameter.Name?.ToLowerInvariant(), parameter.ParameterType.GetDiscordType(),
+                    "Описание лол, я это автоматически добавляю, какие описания)", false);
             }
 
             SlashCommandProperties command = guildCommand.Build();
@@ -114,9 +123,14 @@ public class CommandHandler
             Console.WriteLine(json);
         }
 
-        Commands.AddDbContextAccessor((_serviceProvider.GetService(typeof(IDbContextAccessor)) as IDbContextAccessor)!);
-        
-        await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
+        try
+        {
+            await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 }
 
@@ -133,5 +147,5 @@ public interface IDsMessage
     public string MessageText { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
-    public IReadOnlyCollection<Attachment> Attachments { get; }
+    public IReadOnlyCollection<IAttachment> Attachments { get; }
 }

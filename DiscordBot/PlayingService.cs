@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Discord.Audio;
 using NAudio.Wave;
@@ -10,14 +9,13 @@ namespace DiscordBot;
 
 public static class PlayingService
 {
-    private const string SOUNDS_PATH = @"C:\Users\disre\Desktop\ds_bot\Sounds\";
     public static Queue<string> Queue { get; } = new();
-    private static AudioOutStream? TargetStream { get; set; }
+    private static IAudioClient? AudioClient { get; set; }
     public static bool PlayingStatus { get; set; }
     
-    public static void ChangeChannel(IAudioClient audioClient)
+    public static void ChangeAudioClient(IAudioClient audioClient)
     {
-        TargetStream = audioClient.CreatePCMStream(AudioApplication.Music);
+        AudioClient = audioClient;
     }
 
     public static async Task ForcePlay()
@@ -30,33 +28,52 @@ public static class PlayingService
     
     public static async Task Play(string songSource)
     {
-        (Mp3FileReader mp3FileReader, MemoryStream memoryStream) = await GetSongStream(songSource);
+        WaveFormat waveFormat = new WaveFormat(48000, 16, 2);
+        MemoryStream memoryStream = await GetSongStream(songSource);
+        Mp3FileReader mp3FileReader = new Mp3FileReader(memoryStream);
+        MediaFoundationResampler resampler = new MediaFoundationResampler(mp3FileReader, waveFormat);
+        
+        resampler.ResamplerQuality = 60; // Set the quality of the resampler to 60, the highest quality
+        int blockSize = waveFormat.AverageBytesPerSecond / 50; // Establish the size of our AudioBuffer
+        byte[] buffer = new byte[blockSize];
+        int byteCount;
+        
+        AudioOutStream? targetStream = AudioClient.CreatePCMStream(AudioApplication.Mixed);
+        PlayingStatus = true;
         
         try
         {
-            PlayingStatus = true;
-            await mp3FileReader.CopyToAsync(TargetStream, 1024);
+            while ((byteCount = resampler.Read(buffer, 0, blockSize)) > 0) // Read audio into our buffer, and keep a loop open while data is present
+            {
+                if (byteCount < blockSize)
+                {
+                    // Incomplete Frame
+                    for (int i = byteCount; i < blockSize; i++)
+                    {
+                        buffer[i] = 0;
+                    }
+                }
+                
+                await targetStream.WriteAsync(buffer, 0, blockSize); // Send the buffer to Discord
+            }
+
             PlayingStatus = false;
         }
         finally
         {
-            await TargetStream.FlushAsync();
+            await targetStream.DisposeAsync();
             await mp3FileReader.DisposeAsync();
             await memoryStream.DisposeAsync();
         }
 
-        try
+        if (Queue.Count > 0)
         {
             string nextSongName = Queue.Dequeue();
             await Play(nextSongName);
         }
-        catch
-        {
-            // ignored
-        }
     }
     
-    private static async Task<(Mp3FileReader, MemoryStream)> GetSongStream(string songSource)
+    private static async Task<MemoryStream> GetSongStream(string songSource)
     {
         using (WebClient client = new WebClient())
         {
@@ -64,7 +81,7 @@ public static class PlayingService
 
             MemoryStream memoryStream = new MemoryStream(downloadData);
             
-            return (new Mp3FileReader(memoryStream), memoryStream);
+            return memoryStream;
         }
     }
 }

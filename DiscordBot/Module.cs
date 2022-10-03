@@ -22,8 +22,8 @@ public class ModuleDsMessage : IDsMessage
     public string MessageText { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
-    public IReadOnlyCollection<Attachment> Attachments { get; }
-    public ModuleDsMessage(string messageText, ISocketMessageChannel channel, SocketUser author, IReadOnlyCollection<Attachment> attachments)
+    public IReadOnlyCollection<IAttachment> Attachments { get; }
+    public ModuleDsMessage(string messageText, ISocketMessageChannel channel, SocketUser author, IReadOnlyCollection<IAttachment> attachments)
     {
         this.MessageText = messageText;
         this.Channel = channel;
@@ -85,12 +85,21 @@ public class Module : ModuleBase<SocketCommandContext>
     }
     
     [Command("song", RunMode = RunMode.Async)]
-    [Summary("Достает из базы рандомную песню")]
-    public async Task Song(string? song = null)
+    [Summary("Включает рандомную песню из базы")]
+    public async Task Song(string? songName = null)
     {
         ModuleDsContext context = new ModuleDsContext(this.Context);
-        string audioMessage = await Commands.Song(context, song);
+        string audioMessage = await Commands.Song(context, songName);
         await this.Context.Channel.SendMessageAsync(audioMessage);
+    }
+    
+    [Command("leave", RunMode = RunMode.Async)]
+    [Summary("Выходит из войса")]
+    public async Task Leave()
+    {
+        ModuleDsContext context = new ModuleDsContext(this.Context);
+        string message = await Commands.Leave(context);
+        await this.Context.Channel.SendMessageAsync(message);
     }
     
     [Command("харош", RunMode = RunMode.Async)]

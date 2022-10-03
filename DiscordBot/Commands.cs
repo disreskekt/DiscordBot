@@ -53,20 +53,22 @@ public class Commands
         }
 
         string text = context.Message.MessageText;
+        text = text.TrimStart(' ')
+            .TrimStart('-')
+            .TrimEnd(' ');
         switch (text)
         {
-            case not null when text.StartsWith("add https://tenor.com/view/"):
-                int indexOfWhitespace = text.IndexOf(' ');
-                string tenorLink = text.Substring(indexOfWhitespace + 1);
-                await AddTenorGif(tenorLink, user, db);
-                break;
-            case "-add" when context.Message.Attachments.Count > 0:
+            // case not null when text.StartsWith("add https://tenor.com/view/"):
+            //     int indexOfWhitespace = text.IndexOf(' ');
+            //     string tenorLink = text.Substring(indexOfWhitespace + 1);
+            //     await AddTenorGif(tenorLink, user, db);
+            //     break;
+            case "add" when context.Message.Attachments.Count > 0:
                 await AddNewContentTypes(context.Message.Attachments, db);
                 await AddAttachments(context.Message.Attachments, user, db);
                 break;
-            // case "add":
-            //     await message.Channel.SendMessageAsync("Ну может ты что-нибудь прикрепишь?");
-            //     break;
+            case "-add":
+                return "Ну может ты что-нибудь прикрепишь?";
             default:
                 await db.SaveChangesAsync();
                 return "Неизвестная команда лол";
@@ -123,13 +125,42 @@ public class Commands
         return await SetSong(context, audioContentSource);
     }
     
+    public static async Task<string> Leave(IDsContext context)
+    {
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        VoiceChannelStatus voiceChannelStatus = GuildsHelper.GetOrSet(context.Guild.Id);
+
+        ulong? actualChannel = voiceChannelStatus.FindActualChannel();
+        
+        if (actualChannel is null)
+        {
+            return "Да вроде не в войсе";
+        }
+
+        voiceChannelStatus.LeaveChannel(actualChannel.Value);
+
+        SocketGuildChannel channelToLeave = context.Guild.GetChannel(actualChannel.Value);
+
+        IVoiceChannel voiceChannelToLeave = (channelToLeave as IVoiceChannel)!;
+        
+        await voiceChannelToLeave.DisconnectAsync();
+        
+        PlayingService.Queue.Clear();
+        PlayingService.PlayingStatus = false;
+        
+        return "Бб лохи";
+    }
+    
     public static async Task<string> Harosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "harosh", "audio/mpeg");
+        string audioContentSource = await GetContentSource(db, "harosh", "pharses");
 
         return await SetSong(context, audioContentSource);
     }
@@ -140,7 +171,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "megaharosh", "audio/mpeg");
+        string audioContentSource = await GetContentSource(db, "megaharosh", "pharses");
 
         return await SetSong(context, audioContentSource);
     }
@@ -151,7 +182,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "chelharosh", "audio/mpeg");
+        string audioContentSource = await GetContentSource(db, "chelharosh", "pharses");
 
         return await SetSong(context, audioContentSource);
     }
@@ -162,7 +193,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "ahuitelen", "audio/mpeg");
+        string audioContentSource = await GetContentSource(db, "ahuitelen", "pharses");
 
         return await SetSong(context, audioContentSource);
     }
@@ -173,7 +204,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "ploh", "audio/mpeg");
+        string audioContentSource = await GetContentSource(db, "ploh", "pharses");
 
         return await SetSong(context, audioContentSource);
     }
@@ -275,7 +306,7 @@ public class Commands
         return user;
     }
 
-    private static async Task AddNewContentTypes(IReadOnlyCollection<Attachment> attachments, DataContext db)
+    private static async Task AddNewContentTypes(IReadOnlyCollection<IAttachment> attachments, DataContext db)
     {
         foreach (Attachment attachment in attachments)
         {
@@ -294,14 +325,14 @@ public class Commands
         await db.SaveChangesAsync();
     }
 
-    private static async Task AddTenorGif(string tenorLink, User user, DataContext db)
-    {
-        await SetContent(db, user, tenorLink, "image/gif");
-    }
+    // private static async Task AddTenorGif(string tenorLink, User user, DataContext db)
+    // {
+    //     await SetContent(db, user, tenorLink, "image/gif");
+    // }
 
-    private static async Task AddAttachments(IReadOnlyCollection<Attachment> attachments, User user, DataContext db)
+    private static async Task AddAttachments(IReadOnlyCollection<IAttachment> attachments, User user, DataContext db)
     {
-        foreach (Attachment attachment in attachments)
+        foreach (IAttachment attachment in attachments)
         {
             await SetContent(db, user, attachment.Url, attachment.ContentType);
         }
@@ -398,7 +429,7 @@ public class Commands
         if (isChanged)
         {
             audioClient = await voiceChannel.ConnectAsync();
-            PlayingService.ChangeChannel(audioClient);
+            PlayingService.ChangeAudioClient(audioClient);
             voiceChannelStatus.ChannelsClient.AddOrChangeValue(voiceChannel.Id, audioClient);
         }
         else

@@ -30,8 +30,8 @@ public class DsMessage : IDsMessage
     public string MessageText { get; set; }
     public ISocketMessageChannel Channel { get; }
     public SocketUser User { get; }
-    public IReadOnlyCollection<Attachment> Attachments { get; }
-    public DsMessage(string messageText, ISocketMessageChannel channel, SocketUser user, IReadOnlyCollection<Attachment> attachments)
+    public IReadOnlyCollection<IAttachment> Attachments { get; }
+    public DsMessage(string messageText, ISocketMessageChannel channel, SocketUser user, IReadOnlyCollection<IAttachment> attachments)
     {
         this.MessageText = messageText;
         this.Channel = channel;
@@ -53,10 +53,10 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     }
     
     [SlashCommand("add", "Добавляет контент в базу")]
-    public async Task Add([Remainder] string source)
+    public async Task Add([Remainder] IAttachment attachment)
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName + ' ' + source, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, new IAttachment[] {attachment});
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string? addMessage = await Commands.Add(dsContext);
         if (addMessage is null)
@@ -97,13 +97,23 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     }
     
     [SlashCommand("song", "Достает из базы рандомную песню")]
-    public async Task Song()
+    public async Task Song([Remainder] string? songName = null)
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
         DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
-        string audioMessage = await Commands.Song(dsContext);
+        string audioMessage = await Commands.Song(dsContext, songName);
         await this.Context.Interaction.RespondAsync(audioMessage);
+    }
+    
+    [SlashCommand("leave", "Выходит из войса")]
+    public async Task Leave()
+    {
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
+        string message = await Commands.Leave(dsContext);
+        await this.Context.Interaction.RespondAsync(message);
     }
     
     [SlashCommand("харош", "Харош)", false, Discord.Interactions.RunMode.Async)]
