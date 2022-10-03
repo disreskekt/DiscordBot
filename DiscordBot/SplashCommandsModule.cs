@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Helpers;
 using RunMode = Discord.Commands.RunMode;
 
 namespace DiscordBot;
@@ -46,7 +47,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Help()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string helpMessage = await Commands.Help(dsContext);
         await this.Context.Interaction.RespondAsync(helpMessage);
@@ -70,7 +71,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Any()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string anyMessage = await Commands.Any(dsContext);
         await this.Context.Interaction.RespondAsync(anyMessage);
@@ -80,7 +81,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Gif()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string gifMessage = await Commands.Gif(dsContext);
         await this.Context.Interaction.RespondAsync(gifMessage);
@@ -90,7 +91,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Image()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string imageMessage = await Commands.Image(dsContext);
         await this.Context.Interaction.RespondAsync(imageMessage);
@@ -100,7 +101,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Song([Remainder] string? songName = null)
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string audioMessage = await Commands.Song(dsContext, songName);
         await this.Context.Interaction.RespondAsync(audioMessage);
@@ -110,17 +111,29 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Leave()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Leave(dsContext);
         await this.Context.Interaction.RespondAsync(message);
+    }
+    
+    [SlashCommand("songlist", "Выдает список доступных песен")]
+    public async Task SongList([Remainder] int page = 1)
+    {
+        SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
+        DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
+        string message = await Commands.SongList(dsContext, page);
+        
+        MessageComponent messageComponent = CommandHelper.BuildButtons(message);
+        await this.Context.Interaction.RespondAsync(message, components: messageComponent);
     }
     
     [SlashCommand("харош", "Харош)", false, Discord.Interactions.RunMode.Async)]
     public async Task Harosh()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Harosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -130,7 +143,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Megaharosh()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Megaharosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -140,7 +153,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task ChelHarosh()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.ChelHarosh(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -150,7 +163,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Ahuitelen()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Ahuitelen(dsContext);
         await this.Context.Interaction.RespondAsync(message);
@@ -160,7 +173,7 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     public async Task Ploh()
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
-        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<Attachment>());
+        DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
         string message = await Commands.Ploh(dsContext);
         await this.Context.Interaction.RespondAsync(message);

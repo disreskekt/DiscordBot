@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.Interactions;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBot.Helpers;
 using DiscordBot.Helpers.Extensions;
 using Newtonsoft.Json;
 using IResult = Discord.Commands.IResult;
@@ -43,6 +44,7 @@ public class CommandHandler
         _client.MessageReceived += HandleCommandAsync;
         _client.Ready += ClientReady;
         _client.InteractionCreated += HandleInteractionAsync;
+        _client.ButtonExecuted += ButtonHandler;
     }
 
     private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -131,6 +133,35 @@ public class CommandHandler
         {
             // ignored
         }
+    }
+
+    private async Task ButtonHandler(SocketMessageComponent component)
+    {
+        int indexOfSlash = component.Message.Content.IndexOf('/');
+        string pageNumberString = component.Message.Content.Substring(0, indexOfSlash);
+        int pageNumber = Convert.ToInt32(pageNumberString);
+
+        string newSongPage = "";
+        switch(component.Data.CustomId)
+        {
+            case "left_arrow_page":
+                newSongPage = await Commands.SongListNextOrPreviousPage(pageNumber - 1);
+                break;
+            case "right_arrow_page":
+                newSongPage = await Commands.SongListNextOrPreviousPage(pageNumber + 1);
+                break;
+        }
+        
+        MessageComponent messageComponent = CommandHelper.BuildButtons(newSongPage);
+
+        await component.Message.DeleteAsync();
+        await component.Channel.SendMessageAsync(newSongPage, components: messageComponent);
+        
+        // await component.Message.ModifyAsync(message =>
+        // {
+        //     message.Content = newSongPage;
+        //     message.Components = messageComponent;
+        // });
     }
 }
 

@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
+using DiscordBot.Helpers;
 
 namespace DiscordBot;
 
@@ -100,6 +104,18 @@ public class Module : ModuleBase<SocketCommandContext>
         ModuleDsContext context = new ModuleDsContext(this.Context);
         string message = await Commands.Leave(context);
         await this.Context.Channel.SendMessageAsync(message);
+    }
+    
+    [Command("songlist")]
+    [Summary("Выдает список доступных песен")]
+    public async Task SongList(int page = 1)
+    {
+        ModuleDsContext context = new ModuleDsContext(this.Context);
+        string message = await Commands.SongList(context, page);
+        
+        MessageComponent messageComponent = CommandHelper.BuildButtons(message);
+        
+        await this.Context.Channel.SendMessageAsync(message, components: messageComponent);
     }
     
     [Command("харош", RunMode = RunMode.Async)]

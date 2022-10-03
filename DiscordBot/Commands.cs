@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -152,6 +153,99 @@ public class Commands
         PlayingService.PlayingStatus = false;
         
         return "Бб лохи";
+    }
+    
+    public static async Task<string> SongList(IDsContext context, int page = 1)
+    {
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        await PreparingToExecuteCommand(context.Message, db);
+        await db.SaveChangesAsync();
+        
+        if (page <= 0)
+        {
+            return "Дебил?";
+        }
+        
+        int pageAmount = await GetPageAmount(db);
+        if (page > pageAmount)
+        {
+            return $"Всего {pageAmount} страниц";
+        }
+        
+        return GetSongPage(page, db, pageAmount);
+    }
+
+    public static async Task<string> SongListNextOrPreviousPage(int page)
+    {
+        await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
+        
+        if (page <= 0)
+        {
+            throw new PublicException("Блять как ты это сделал?");
+        }
+        
+        int pageAmount = await GetPageAmount(db);
+        if (page > pageAmount)
+        {
+            throw new PublicException("Блять как ты это сделал?");
+        } 
+        
+        return GetSongPage(page, db, pageAmount);
+    }
+
+    private static string GetSongPage(int page, DataContext db, int pageAmount)
+    {
+        List<string> sourceList = db.Contents.Where(c => c.ContentTypeId == 4)
+            .Skip(page * 10 - 10)
+            .Take(10)
+            .Select(c => c.ContentSource)
+            .ToList();
+
+        StringBuilder sb = new StringBuilder()
+            .Append(page)
+            .Append('/')
+            .Append(pageAmount)
+            .Append(':')
+            .AppendLine();
+
+        for (int i = 0; i < sourceList.Count; i++)
+        {
+            string source = sourceList[i];
+            int lastIndexOfSlash = source.LastIndexOf('/');
+            int lastIndexOfDot = source.LastIndexOf('.');
+
+            sb.Append(i + 1)
+                .Append('.')
+                .Append(' ')
+                .Append(source.AsSpan(lastIndexOfSlash + 1, lastIndexOfDot - lastIndexOfSlash - 1));
+
+            if (i < sourceList.Count - 1)
+            {
+                sb.AppendLine();
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private static async Task<int> GetPageAmount(DataContext db)
+    {
+        int count = await db.Contents.Where(c => c.ContentTypeId == 4).CountAsync();
+
+        int countDividedByTen = count / 10;
+        int countPercentOften = count % 10;
+
+        int pageAmount;
+        if (countPercentOften == 0)
+        {
+            pageAmount = countDividedByTen;
+        }
+        else
+        {
+            pageAmount = countDividedByTen + 1;
+        }
+
+        return pageAmount;
     }
     
     public static async Task<string> Harosh(IDsContext context)
@@ -308,7 +402,7 @@ public class Commands
 
     private static async Task AddNewContentTypes(IReadOnlyCollection<IAttachment> attachments, DataContext db)
     {
-        foreach (Attachment attachment in attachments)
+        foreach (IAttachment attachment in attachments)
         {
             ContentType? dbContentType =
                 await db.ContentTypes.FirstOrDefaultAsync(ct => ct.Name == attachment.ContentType);
