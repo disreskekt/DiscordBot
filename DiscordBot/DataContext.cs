@@ -5,12 +5,9 @@ namespace DiscordBot;
 
 public class DataContext : DbContext
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<UsernameCondition> UsernameConditions { get; set; }
     public DbSet<ContentType> ContentTypes { get; set; }
     public DbSet<Content> Contents { get; set; }
-    public DbSet<Message> Messages { get; set; }
-
+    
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
         

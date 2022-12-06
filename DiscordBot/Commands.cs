@@ -34,7 +34,6 @@ public class Commands
     public static async Task<string> Help(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         
         const string helpMessage = @"Ахахаха пашол нахуй пидар";
         
@@ -46,13 +45,7 @@ public class Commands
     public static async Task<string?> Add(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        User? user = await PreparingToExecuteCommand(context.Message, db);
-
-        if (user is null)
-        {
-            return null;
-        }
-
+        
         string text = context.Message.MessageText;
         text = text.TrimStart(' ')
             .TrimStart('-')
@@ -66,7 +59,7 @@ public class Commands
             //     break;
             case "add" when context.Message.Attachments.Count > 0:
                 await AddNewContentTypes(context.Message.Attachments, db);
-                await AddAttachments(context.Message.Attachments, user, db);
+                await AddAttachments(context.Message.Attachments, db);
                 break;
             case "-add":
                 return "Ну может ты что-нибудь прикрепишь?";
@@ -82,7 +75,6 @@ public class Commands
     public static async Task<string> Any(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         
         string anyContentSource = await GetAnyContentSource(db);
         
@@ -94,7 +86,6 @@ public class Commands
     public static async Task<string> Gif(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         
         string gifContentSource = await GetContentSource(db, null, "image/gif");
         
@@ -106,7 +97,6 @@ public class Commands
     public static async Task<string> Image(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         
         string imageContentSource = await GetContentSource(db, null, "image/png", "image/jpeg");
         
@@ -118,7 +108,6 @@ public class Commands
     public static async Task<string> Song(IDsContext context, string? songName = null)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, songName, "audio/mpeg");
@@ -129,7 +118,6 @@ public class Commands
     public static async Task<string> Leave(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         VoiceChannelStatus voiceChannelStatus = GuildsHelper.GetOrSet(context.Guild.Id);
@@ -158,7 +146,6 @@ public class Commands
     public static async Task<string> SongList(IDsContext context, int page = 1)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         if (page <= 0)
@@ -251,7 +238,6 @@ public class Commands
     public static async Task<string> Harosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "harosh", "phrases");
@@ -262,7 +248,6 @@ public class Commands
     public static async Task<string> Megaharosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "megaharosh", "phrases");
@@ -273,7 +258,6 @@ public class Commands
     public static async Task<string> ChelHarosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "chelharosh", "phrases");
@@ -284,7 +268,6 @@ public class Commands
     public static async Task<string> Ahuitelen(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "ahuitelen", "phrases");
@@ -295,111 +278,13 @@ public class Commands
     public static async Task<string> Ploh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "ploh", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
-
-    private static async Task<User?> PreparingToExecuteCommand(IDsMessage message, DataContext db)
-    {
-        User? user = await db.Users.FindAsync(message.User.Id);
-
-        if (user is not null)
-        {
-            CheckUsernameCondition(message.User.Username, db, user);
-        }
-        else
-        {
-            user = CreateUser(message.User, db);
-        }
-                
-        // if (user.Banned)
-        // {
-        //     await message.Channel.SendMessageAsync("Зачилься другалек"); //todo блять он пишет это но ставит все равно
-        //             
-        //     return null;
-        // }
-        
-        await db.Entry(user).Collection(u => u.Messages).LoadAsync();
-        if (user.Messages.Any() && user.Messages.Count > 4)
-        {
-            DateTime last = DateTime.Now + new TimeSpan(3, 0, 0);
-            DateTime lastButFive = user.Messages.OrderByDescending(m => m.SentDate).Select(m => m.SentDate).Skip(4).First();
-            // if (await BanIfSpamming(lastButFive, last, user, db))
-            // {
-            //     await message.Channel.SendMessageAsync("Зачилься другалек");
-            //             
-            //     return null;
-            // }
-        }
-        
-        db.Messages.Add(new Message
-        {
-            MessageText = message.MessageText,
-            SentDate = DateTime.Now,
-            UserId = message.User.Id
-        });
-
-        return user;
-    }
     
-    private static async Task<bool> BanIfSpamming(DateTime earlier, DateTime later, User user, DataContext db)
-    {
-        long ticks = later.Subtract(earlier).Ticks;
-        double totalSeconds = TimeSpan.FromTicks(ticks).TotalSeconds;
-        
-        if (totalSeconds < 15)
-        {
-            user.BannedUntill = DateTime.Now.AddMinutes(5);
-            
-            await db.SaveChangesAsync();
-                
-            return true;
-        }
-        
-        return false;
-    }
-
-    private static void CheckUsernameCondition(string newUsername, DataContext db, User user)
-    {
-        UsernameCondition actualCondition = db.UsernameConditions.Where(uc => uc.UserId == user.Id)
-            .OrderByDescending(uc => uc.Queue)
-            .First();
-
-        if (newUsername != actualCondition.Username)
-        {
-            db.UsernameConditions.Add(new UsernameCondition
-            {
-                User = user,
-                Username = newUsername,
-                Queue = actualCondition.Queue + 1
-            });
-        }
-    }
-    
-    private static User CreateUser(SocketUser author, DataContext db)
-    {
-        User user = new User
-        {
-            Id = author.Id,
-            FirstMessageDate = DateTime.Now
-        };
-
-        db.Users.Add(user);
-
-        db.UsernameConditions.Add(new UsernameCondition
-        {
-            User = user,
-            Username = author.Username,
-            Queue = 1
-        });
-            
-        return user;
-    }
-
     private static async Task AddNewContentTypes(IReadOnlyCollection<IAttachment> attachments, DataContext db)
     {
         foreach (IAttachment attachment in attachments)
@@ -418,21 +303,16 @@ public class Commands
 
         await db.SaveChangesAsync();
     }
-
-    // private static async Task AddTenorGif(string tenorLink, User user, DataContext db)
-    // {
-    //     await SetContent(db, user, tenorLink, "image/gif");
-    // }
-
-    private static async Task AddAttachments(IReadOnlyCollection<IAttachment> attachments, User user, DataContext db)
+    
+    private static async Task AddAttachments(IReadOnlyCollection<IAttachment> attachments, DataContext db)
     {
         foreach (IAttachment attachment in attachments)
         {
-            await SetContent(db, user, attachment.Url, attachment.ContentType);
+            await SetContent(db, attachment.Url, attachment.ContentType);
         }
     }
     
-    private static async Task SetContent(DataContext db, User user, string contentContent, string contentTypeName)
+    private static async Task SetContent(DataContext db, string contentContent, string contentTypeName)
     {
         ContentType? contentType =
             await db.ContentTypes.FirstOrDefaultAsync(ct => ct.Name == contentTypeName);
@@ -444,7 +324,6 @@ public class Commands
 
         db.Contents.Add(new Content
         {
-            User = user,
             ContentType = contentType,
             ContentSource = contentContent,
             UploadingDate = DateTime.Now
@@ -498,7 +377,6 @@ public class Commands
     private static async Task<string> PlaySound(string songName, IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
 
         // return await SetSong(db, context, audiContentSource);
