@@ -13,6 +13,7 @@ public class DataContext : DbContext
         
     }
     
+    // it uses for migrations
     // protected override void OnConfiguring(DbContextOptionsBuilder options)
     // {
     //     options.UseNpgsql("Host=localhost;Port=5432;Database=DsDb;Username=postgres;Password=wronghousefool");

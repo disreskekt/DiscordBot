@@ -36,8 +36,6 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
         const string helpMessage = @"Ахахаха пашол нахуй пидар";
-        
-        await db.SaveChangesAsync();
 
         return helpMessage;
     }
@@ -56,19 +54,19 @@ public class Commands
             //     int indexOfWhitespace = text.IndexOf(' ');
             //     string tenorLink = text.Substring(indexOfWhitespace + 1);
             //     await AddTenorGif(tenorLink, user, db);
+            //     await db.SaveChangesAsync();
             //     break;
             case "add" when context.Message.Attachments.Count > 0:
                 await AddNewContentTypes(context.Message.Attachments, db);
                 await AddAttachments(context.Message.Attachments, db);
+                await db.SaveChangesAsync();
                 break;
             case "-add":
                 return "Ну может ты что-нибудь прикрепишь?";
             default:
-                await db.SaveChangesAsync();
                 return "Неизвестная команда лол";
         }
         
-        await db.SaveChangesAsync();
         return SAVED;
     }
 
@@ -77,8 +75,6 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
         string anyContentSource = await GetAnyContentSource(db);
-        
-        await db.SaveChangesAsync();
 
         return anyContentSource;
     }
@@ -88,8 +84,6 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
         string gifContentSource = await GetContentSource(db, null, "image/gif");
-        
-        await db.SaveChangesAsync();
 
         return gifContentSource;
     }
@@ -99,8 +93,6 @@ public class Commands
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
         string imageContentSource = await GetContentSource(db, null, "image/png", "image/jpeg");
-        
-        await db.SaveChangesAsync();
 
         return imageContentSource;
     }
@@ -108,7 +100,6 @@ public class Commands
     public static async Task<string> Song(IDsContext context, string? songName = null)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, songName, "audio/mpeg");
 
@@ -118,7 +109,6 @@ public class Commands
     public static async Task<string> Leave(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         VoiceChannelStatus voiceChannelStatus = GuildsHelper.GetOrSet(context.Guild.Id);
 
@@ -146,7 +136,6 @@ public class Commands
     public static async Task<string> SongList(IDsContext context, int page = 1)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         if (page <= 0)
         {
@@ -238,7 +227,6 @@ public class Commands
     public static async Task<string> Harosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "harosh", "phrases");
 
@@ -248,7 +236,6 @@ public class Commands
     public static async Task<string> Megaharosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "megaharosh", "phrases");
 
@@ -258,7 +245,6 @@ public class Commands
     public static async Task<string> ChelHarosh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "chelharosh", "phrases");
 
@@ -268,7 +254,6 @@ public class Commands
     public static async Task<string> Ahuitelen(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "ahuitelen", "phrases");
 
@@ -278,7 +263,6 @@ public class Commands
     public static async Task<string> Ploh(IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
         
         string audioContentSource = await GetContentSource(db, "ploh", "phrases");
 
@@ -300,8 +284,6 @@ public class Commands
                 });
             }
         }
-
-        await db.SaveChangesAsync();
     }
     
     private static async Task AddAttachments(IReadOnlyCollection<IAttachment> attachments, DataContext db)
@@ -377,7 +359,6 @@ public class Commands
     private static async Task<string> PlaySound(string songName, IDsContext context)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
-        await db.SaveChangesAsync();
 
         // return await SetSong(db, context, audiContentSource);
         return "";
