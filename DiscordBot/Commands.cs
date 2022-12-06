@@ -254,7 +254,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "harosh", "pharses");
+        string audioContentSource = await GetContentSource(db, "harosh", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -265,7 +265,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "megaharosh", "pharses");
+        string audioContentSource = await GetContentSource(db, "megaharosh", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -276,7 +276,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "chelharosh", "pharses");
+        string audioContentSource = await GetContentSource(db, "chelharosh", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -287,7 +287,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "ahuitelen", "pharses");
+        string audioContentSource = await GetContentSource(db, "ahuitelen", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -298,7 +298,7 @@ public class Commands
         await PreparingToExecuteCommand(context.Message, db);
         await db.SaveChangesAsync();
         
-        string audioContentSource = await GetContentSource(db, "ploh", "pharses");
+        string audioContentSource = await GetContentSource(db, "ploh", "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -316,24 +316,24 @@ public class Commands
             user = CreateUser(message.User, db);
         }
                 
-        if (user.Banned)
-        {
-            await message.Channel.SendMessageAsync("Зачилься другалек");
-                    
-            return null;
-        }
+        // if (user.Banned)
+        // {
+        //     await message.Channel.SendMessageAsync("Зачилься другалек"); //todo блять он пишет это но ставит все равно
+        //             
+        //     return null;
+        // }
         
         await db.Entry(user).Collection(u => u.Messages).LoadAsync();
         if (user.Messages.Any() && user.Messages.Count > 4)
         {
             DateTime last = DateTime.Now + new TimeSpan(3, 0, 0);
             DateTime lastButFive = user.Messages.OrderByDescending(m => m.SentDate).Select(m => m.SentDate).Skip(4).First();
-            if (await BanIfSpamming(lastButFive, last, user, db))
-            {
-                await message.Channel.SendMessageAsync("Зачилься другалек");
-                        
-                return null;
-            }
+            // if (await BanIfSpamming(lastButFive, last, user, db))
+            // {
+            //     await message.Channel.SendMessageAsync("Зачилься другалек");
+            //             
+            //     return null;
+            // }
         }
         
         db.Messages.Add(new Message

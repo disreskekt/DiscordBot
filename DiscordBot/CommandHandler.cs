@@ -21,6 +21,7 @@ public class CommandHandler
 {
     private const ulong OUR_GUILD = 663898503076118528;
     private const ulong MY_GUILD = 903390442979221565;
+    private const ulong SAYO = 236493190771900416;
     
     private readonly DiscordSocketClient _client;
     private readonly CommandService _commands;
@@ -78,6 +79,7 @@ public class CommandHandler
     {
         SocketGuild? ourGuild = _client.GetGuild(OUR_GUILD);
         SocketGuild? myGuild = _client.GetGuild(MY_GUILD);
+        SocketGuild? sayo = _client.GetGuild(SAYO);
         
         MethodInfo[] methods = typeof(SplashCommandsModule).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
         SlashCommandProperties[] commands = new SlashCommandProperties[methods.Length];
@@ -115,6 +117,7 @@ public class CommandHandler
         {
             await ourGuild.BulkOverwriteApplicationCommandAsync(commands);
             await myGuild.BulkOverwriteApplicationCommandAsync(commands);
+            await sayo.BulkOverwriteApplicationCommandAsync(commands);
         }
         catch(HttpException exception)
         {
