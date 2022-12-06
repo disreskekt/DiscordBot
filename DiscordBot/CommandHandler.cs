@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -13,20 +12,16 @@ using DiscordBot.Helpers.Extensions;
 using Newtonsoft.Json;
 using IResult = Discord.Commands.IResult;
 using ParameterInfo = System.Reflection.ParameterInfo;
-using SummaryAttribute = Discord.Commands.SummaryAttribute;
 
 namespace DiscordBot;
 
 public class CommandHandler
 {
-    private const ulong OUR_GUILD = 663898503076118528;
-    private const ulong MY_GUILD = 903390442979221565;
-    private const ulong SAYO = 236493190771900416;
-    
     private readonly DiscordSocketClient _client;
     private readonly CommandService _commands;
     private readonly InteractionService _interactionService;
     private readonly IServiceProvider _serviceProvider;
+    private ulong[] _guilds;
 
     public CommandHandler(DiscordSocketClient client, CommandService commands, InteractionService interactionService, IServiceProvider serviceProvider)
     {
@@ -36,8 +31,10 @@ public class CommandHandler
         _serviceProvider = serviceProvider;
     }
 
-    public async Task InstallCommandsAsync()
+    public async Task InstallCommandsAsync(params ulong[] guilds)
     {
+        _guilds = guilds;
+        
         await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
         
         Commands.AddDbContextAccessor((_serviceProvider.GetService(typeof(IDbContextAccessor)) as IDbContextAccessor)!);
@@ -77,10 +74,6 @@ public class CommandHandler
 
     private async Task ClientReady()
     {
-        SocketGuild? ourGuild = _client.GetGuild(OUR_GUILD);
-        SocketGuild? myGuild = _client.GetGuild(MY_GUILD);
-        SocketGuild? sayo = _client.GetGuild(SAYO);
-        
         MethodInfo[] methods = typeof(SplashCommandsModule).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
         SlashCommandProperties[] commands = new SlashCommandProperties[methods.Length];
         for (int i = 0; i < methods.Length; i++)
@@ -115,9 +108,10 @@ public class CommandHandler
 
         try
         {
-            await ourGuild.BulkOverwriteApplicationCommandAsync(commands);
-            await myGuild.BulkOverwriteApplicationCommandAsync(commands);
-            await sayo.BulkOverwriteApplicationCommandAsync(commands);
+            foreach (ulong guildId in _guilds)
+            {
+                await _client.GetGuild(guildId).BulkOverwriteApplicationCommandAsync(commands); //todo
+            }
         }
         catch(HttpException exception)
         {

@@ -181,13 +181,13 @@ public class Commands
         
         if (page <= 0)
         {
-            throw new PublicException("Блять как ты это сделал?");
+            throw new Exception("Блять как ты это сделал?");
         }
         
         int pageAmount = await GetPageAmount(db);
         if (page > pageAmount)
         {
-            throw new PublicException("Блять как ты это сделал?");
+            throw new Exception("Блять как ты это сделал?");
         } 
         
         return GetSongPage(page, db, pageAmount);
@@ -439,7 +439,7 @@ public class Commands
 
         if (contentType is null)
         {
-            throw new PublicException("Content type has not been added yet");
+            throw new Exception("Content type has not been added yet");
         }
 
         db.Contents.Add(new Content
@@ -457,7 +457,7 @@ public class Commands
 
         if (сontentCount < 1)
         {
-            throw new PublicException("Сука нет контента");
+            throw new Exception("Сука нет контента");
         }
             
         Random random = new Random();
@@ -472,7 +472,7 @@ public class Commands
         
         if (contentTypeIds is null || !contentTypeIds.Any())
         {
-            throw new PublicException("Нет таких контент тайпов лох");
+            throw new Exception("Нет таких контент тайпов лох");
         }
         
         IQueryable<Content> typedContents = db.Contents.Where(c => contentTypeIds.Contains(c.ContentTypeId));
@@ -486,7 +486,7 @@ public class Commands
         
         if (typedContentCount < 1)
         {
-            throw new PublicException("Сука нет контента");
+            throw new Exception("Сука нет контента");
         }
         
         Random random = new Random();
