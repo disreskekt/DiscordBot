@@ -179,10 +179,15 @@ public class Commands
 
     private static string GetSongPage(int page, DataContext db, int pageAmount)
     {
-        List<string> sourceList = db.Contents.Where(c => c.ContentTypeId == 4)
+        var sourceList = db.Contents.Where(c => c.ContentTypeId == 4)
+            .OrderBy(c => c.Id)
             .Skip(page * 10 - 10)
             .Take(10)
-            .Select(c => c.ContentSource)
+            .Select(c => new
+            {
+                c.Id,
+                c.ContentSource
+            })
             .ToList();
 
         StringBuilder sb = new StringBuilder()
@@ -194,14 +199,14 @@ public class Commands
 
         for (int i = 0; i < sourceList.Count; i++)
         {
-            string source = sourceList[i];
-            int lastIndexOfSlash = source.LastIndexOf('/');
+            string source = sourceList[i].ContentSource;
+            // int lastIndexOfSlash = source.LastIndexOf('/');
             int lastIndexOfDot = source.LastIndexOf('.');
 
-            sb.Append(i + 1)
+            sb.Append(sourceList[i].Id)
                 .Append('.')
                 .Append(' ')
-                .Append(source.AsSpan(lastIndexOfSlash + 1, lastIndexOfDot - lastIndexOfSlash - 1));
+                .Append(source.AsSpan(0, lastIndexOfDot - 1));
 
             if (i < sourceList.Count - 1)
             {
