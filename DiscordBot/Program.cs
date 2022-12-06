@@ -52,7 +52,8 @@ namespace DiscordBot
                 .BuildServiceProvider();
 
             CommandHandler commandHandler = _serviceProvider.GetRequiredService<CommandHandler>();
-            commandHandler.InstallCommandsAsync().GetAwaiter();
+            ulong[]? guilds = _appConfig.GetSection("Guilds").Get<ulong[]>();
+            commandHandler.InstallCommandsAsync(guilds ?? Array.Empty<ulong>()).GetAwaiter();
         }
         
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();

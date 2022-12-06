@@ -20,6 +20,7 @@ public class Commands
 {
     private const string SAVED = "Сохранил";
     private const string POSTAVIL = "Поставил";
+    private const string SKIPNUL = "Скипнул";
     private static IDbContextAccessor? _dbContextAccessor;
 
     public Commands()
@@ -97,13 +98,20 @@ public class Commands
         return imageContentSource;
     }
 
-    public static async Task<string> Song(IDsContext context, string? songName = null)
+    public static async Task<string> Song(IDsContext context, int? songId = null)
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, songName, "audio/mpeg");
-
+        string audioContentSource = await GetContentSource(db, songId, "audio/mpeg");
+        
         return await SetSong(context, audioContentSource);
+    }
+
+    public static string Skip()
+    {
+        PlayingService.Skip();
+
+        return SKIPNUL;
     }
     
     public static async Task<string> Leave(IDsContext context)
@@ -228,7 +236,7 @@ public class Commands
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, "harosh", "phrases");
+        string audioContentSource = await GetContentSource(db, 22, "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -237,7 +245,7 @@ public class Commands
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, "megaharosh", "phrases");
+        string audioContentSource = await GetContentSource(db, 23, "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -246,7 +254,7 @@ public class Commands
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, "chelharosh", "phrases");
+        string audioContentSource = await GetContentSource(db, 21, "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -255,7 +263,7 @@ public class Commands
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, "ahuitelen", "phrases");
+        string audioContentSource = await GetContentSource(db, 20, "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -264,7 +272,7 @@ public class Commands
     {
         await using DataContext db = _dbContextAccessor!.ResolveContext<DataContext>();
         
-        string audioContentSource = await GetContentSource(db, "ploh", "phrases");
+        string audioContentSource = await GetContentSource(db, 24, "phrases");
 
         return await SetSong(context, audioContentSource);
     }
@@ -327,7 +335,7 @@ public class Commands
         return db.Contents.Select(c => c.ContentSource).Skip(next - 1).First();
     }
         
-    private static async Task<string> GetContentSource(DataContext db, string? contentName = null, params string[] contentNames)
+    private static async Task<string> GetContentSource(DataContext db, int? contentId = null, params string[] contentNames)
     {
         List<int> contentTypeIds = db.ContentTypes.Where(ct => contentNames.Contains(ct.Name)).Select(ct => ct.Id).ToList();
         
@@ -338,9 +346,9 @@ public class Commands
         
         IQueryable<Content> typedContents = db.Contents.Where(c => contentTypeIds.Contains(c.ContentTypeId));
 
-        if (contentName is not null)
+        if (contentId is not null)
         {
-            typedContents = typedContents.Where(c => c.ContentSource.EndsWith("/" + contentName + ".mp3"));
+            typedContents = typedContents.Where(c => c.Id == contentId);
         }
         
         int typedContentCount = await typedContents.CountAsync();
@@ -367,7 +375,6 @@ public class Commands
     private static async Task<string> SetSong(IDsContext context, string audiContentSource)
     {
         IGuildUser? guildUser = context.User as IGuildUser;
-        IAudioClient? audioClient;
         IVoiceChannel? voiceChannel = guildUser?.VoiceChannel;
 
         if (voiceChannel is null)
@@ -381,13 +388,9 @@ public class Commands
 
         if (isChanged)
         {
-            audioClient = await voiceChannel.ConnectAsync();
+            IAudioClient? audioClient = await voiceChannel.ConnectAsync();
             PlayingService.ChangeAudioClient(audioClient);
             voiceChannelStatus.ChannelsClient.AddOrChangeValue(voiceChannel.Id, audioClient);
-        }
-        else
-        {
-            audioClient = voiceChannelStatus.ChannelsClient[voiceChannel.Id];
         }
         
         PlayingService.Queue.Enqueue(audiContentSource);

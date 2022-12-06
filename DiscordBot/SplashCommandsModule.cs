@@ -98,13 +98,20 @@ public class SplashCommandsModule : InteractionModuleBase<SocketInteractionConte
     }
     
     [SlashCommand("song", "Достает из базы рандомную песню")]
-    public async Task Song([Remainder] string? songName = null)
+    public async Task Song([Remainder] int? songid = null) //DO NOT USE CAMEL CASE
     {
         SocketSlashCommand socketSlashCommand = (this.Context.Interaction as SocketSlashCommand)!;
         DsMessage dsMessage = new DsMessage(socketSlashCommand.CommandName, this.Context.Channel, this.Context.User, Array.Empty<IAttachment>());
         DsContext dsContext = new DsContext(dsMessage, dsMessage.Channel, dsMessage.User, this.Context.Guild);
-        string audioMessage = await Commands.Song(dsContext, songName);
+        string audioMessage = await Commands.Song(dsContext, songid);
         await this.Context.Interaction.RespondAsync(audioMessage);
+    }
+    
+    [SlashCommand("skip", "Скипает песню")]
+    public async Task Skip()
+    {
+        string skipMessage = Commands.Skip();
+        await this.Context.Interaction.RespondAsync(skipMessage);
     }
     
     [SlashCommand("leave", "Выходит из войса")]

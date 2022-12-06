@@ -11,6 +11,7 @@ public static class TypeExtensions
         {
             not null when type == typeof(string) => ApplicationCommandOptionType.String,
             not null when type == typeof(int) => ApplicationCommandOptionType.Integer,
+            not null when type == typeof(int?) => ApplicationCommandOptionType.Integer,
             not null when type == typeof(IAttachment) => ApplicationCommandOptionType.Attachment,
             _ => throw new Exception("Нет дискордного типа для параметра команды")
         };

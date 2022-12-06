@@ -99,7 +99,7 @@ public class CommandHandler
             foreach (ParameterInfo parameter in parameters)
             {
                 guildCommand.AddOption(parameter.Name?.ToLowerInvariant(), parameter.ParameterType.GetDiscordType(),
-                    "Описание лол, я это автоматически добавляю, какие описания)", false);
+                    "Сами разбирайтесь, я генерю это автоматически", false);
             }
 
             SlashCommandProperties command = guildCommand.Build();

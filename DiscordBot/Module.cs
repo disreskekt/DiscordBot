@@ -90,11 +90,19 @@ public class Module : ModuleBase<SocketCommandContext>
     
     [Command("song", RunMode = RunMode.Async)]
     [Summary("Включает рандомную песню из базы")]
-    public async Task Song(string? songName = null)
+    public async Task Song(int? songId = null)
     {
         ModuleDsContext context = new ModuleDsContext(this.Context);
-        string audioMessage = await Commands.Song(context, songName);
+        string audioMessage = await Commands.Song(context, songId);
         await this.Context.Channel.SendMessageAsync(audioMessage);
+    }
+    
+    [Command("skip")]
+    [Summary("Скипает песню")]
+    public async Task Skip()
+    {
+        string skipMessage = Commands.Skip();
+        await this.Context.Channel.SendMessageAsync(skipMessage);
     }
     
     [Command("leave", RunMode = RunMode.Async)]

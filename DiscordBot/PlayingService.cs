@@ -9,6 +9,7 @@ namespace DiscordBot;
 
 public static class PlayingService
 {
+    private static bool _skip = false;
     public static Queue<string> Queue { get; } = new();
     private static IAudioClient? AudioClient { get; set; }
     public static bool PlayingStatus { get; set; }
@@ -25,12 +26,18 @@ public static class PlayingService
             await Play(Queue.Dequeue());
         }
     }
+
+    public static void Skip()
+    {
+        _skip = true;
+    }
     
     public static async Task Play(string songSource)
     {
         WaveFormat waveFormat = new WaveFormat(48000, 16, 2);
-        MemoryStream memoryStream = await GetSongStream(songSource);
-        Mp3FileReader mp3FileReader = new Mp3FileReader(memoryStream);
+        // MemoryStream memoryStream = await GetSongStream(songSource);
+        string musicPath = "C:\\Users\\disre\\Desktop\\Music_for_ds" + '\\' + songSource;
+        Mp3FileReader mp3FileReader = new Mp3FileReader(musicPath);
         MediaFoundationResampler resampler = new MediaFoundationResampler(mp3FileReader, waveFormat);
         
         resampler.ResamplerQuality = 60; // Set the quality of the resampler to 60, the highest quality
@@ -55,6 +62,12 @@ public static class PlayingService
                 }
                 
                 await targetStream.WriteAsync(buffer, 0, blockSize); // Send the buffer to Discord
+
+                if (_skip)
+                {
+                    _skip = false;
+                    break;
+                }
             }
 
             PlayingStatus = false;
@@ -63,25 +76,31 @@ public static class PlayingService
         {
             await targetStream.DisposeAsync();
             await mp3FileReader.DisposeAsync();
-            await memoryStream.DisposeAsync();
+            // await memoryStream.DisposeAsync();
         }
 
         if (Queue.Count > 0)
         {
-            string nextSongName = Queue.Dequeue();
-            await Play(nextSongName);
+            string nextSongSource = Queue.Dequeue();
+            await Play(nextSongSource);
         }
     }
     
     private static async Task<MemoryStream> GetSongStream(string songSource)
     {
-        using (WebClient client = new WebClient())
-        {
-            byte[] downloadData = client.DownloadData(songSource);
+        string musicPath = "C:\\Users\\disre\\Desktop\\Music_for_ds" + '\\' + songSource;
 
-            MemoryStream memoryStream = new MemoryStream(downloadData);
-            
-            return memoryStream;
-        }
+        await using FileStream fs = new FileStream(musicPath, FileMode.Open, FileAccess.Read);
+        MemoryStream ms = new MemoryStream();
+        
+        int readed;
+        do
+        {
+            byte[] buffer = new byte[1024];
+            readed = await fs.ReadAsync(buffer);
+            await ms.WriteAsync(buffer);
+        } while (readed > 0);
+
+        return ms;
     }
 }
