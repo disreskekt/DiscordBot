@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordBot.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,14 +22,7 @@ namespace DiscordBot
         
         public Program()
         {
-            string currentDirectory = Directory.GetCurrentDirectory();
-            DirectoryInfo directoryInfo = new DirectoryInfo(currentDirectory);
-            DirectoryInfo targetDirectory = directoryInfo.Parent!.Parent!.Parent!; //todo fix
-
-            _appConfig =  new ConfigurationBuilder()
-                .SetBasePath(targetDirectory.ToString())
-                .AddJsonFile("appsettings.json")
-                .Build();
+            _appConfig = BuildConfig();
             
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             
@@ -50,12 +46,58 @@ namespace DiscordBot
                 .AddDbContext<DataContext>(options => options.UseNpgsql(_appConfig.GetConnectionString("DiscordDb")!))
                 .AddSingleton<IDbContextAccessor, ServiceProviderDbContextAccessor>()
                 .BuildServiceProvider();
-
+            
+            RefreshMusicFolder();
+            
             CommandHandler commandHandler = _serviceProvider.GetRequiredService<CommandHandler>();
             ulong[]? guilds = _appConfig.GetSection("Guilds").Get<ulong[]>();
             commandHandler.InstallCommandsAsync(guilds ?? Array.Empty<ulong>()).GetAwaiter();
         }
         
+        private void RefreshMusicFolder() //todo refactor
+        {
+            DataContext db = _serviceProvider.GetRequiredService<DataContext>();
+
+            List<Content> contents = db.Contents.Where(c => c.ContentTypeId == 4).ToList();
+
+            string musicFolderPath = _appConfig.GetSection("MusicFolderPath").Value!;
+
+            if (!Directory.Exists(musicFolderPath))
+            {
+                Directory.CreateDirectory(musicFolderPath);
+            }
+            
+            string[] fileNames = Directory.GetFiles(musicFolderPath);
+            
+            foreach (string fileName in fileNames)
+            {
+                string shortFileName = Path.GetFileName(fileName);
+
+                if (!contents.Select(c => c.ContentSource).Contains(shortFileName))
+                {
+                    db.Contents.Add(new Content
+                    {
+                        ContentSource = shortFileName,
+                        ContentTypeId = 4
+                    });
+                }
+            }
+            
+            db.SaveChanges();
+        }
+
+        private IConfigurationRoot BuildConfig()
+        {
+            string currentDirectory = Directory.GetCurrentDirectory();
+            DirectoryInfo directoryInfo = new DirectoryInfo(currentDirectory);
+            DirectoryInfo targetDirectory = directoryInfo.Parent!.Parent!.Parent!; //todo fix
+
+            return new ConfigurationBuilder()
+                .SetBasePath(targetDirectory.ToString())
+                .AddJsonFile("appsettings.json")
+                .Build();
+        }
+
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         private async Task MainAsync()
