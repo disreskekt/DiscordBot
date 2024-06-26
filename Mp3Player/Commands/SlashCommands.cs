@@ -41,7 +41,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         try
         {
-            await this.Context.Interaction.RespondAsync("Впадлу помогать");
+            await Context.Interaction.RespondAsync("Впадлу помогать");
         }
         catch (Exception e)
         {
@@ -56,7 +56,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
         {
             if (!attachment.Filename.EndsWith(".mp3"))
             {
-                await this.Context.Interaction.RespondAsync("Ты че даун? mp3 кидай");
+                await Context.Interaction.RespondAsync("Ты че даун? mp3 кидай");
                 return;
             }
             
@@ -64,7 +64,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
             
             if (_fileSystemService.SongNameExists(songname))
             {
-                await this.Context.Interaction.RespondAsync("Трек с таким именем уже существует");
+                await Context.Interaction.RespondAsync("Трек с таким именем уже существует");
                 return;
             }
             
@@ -74,7 +74,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
                 await _fileSystemService.AddFile(mp3Stream, songname);
             }
             
-            await this.Context.Interaction.RespondAsync("Сохранил");
+            await Context.Interaction.RespondAsync("Сохранил");
         }
         catch (Exception e)
         {
@@ -87,11 +87,11 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         try
         {
-            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(this.Context.User);
+            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(Context.User);
             
             if (voiceChannel is null)
             {
-                await this.Context.Interaction.RespondAsync("Ты не в войсе");
+                await Context.Interaction.RespondAsync("Ты не в войсе");
                 return;
             }
             
@@ -112,7 +112,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithSelectMenu(selectMenuBuilder)
                 .Build();
             
-            await this.Context.Interaction.RespondAsync(songListMessage, components: component);
+            await Context.Interaction.RespondAsync(songListMessage, components: component);
         }
         catch (Exception e)
         {
@@ -125,17 +125,17 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         try
         {
-            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(this.Context.User);
+            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(Context.User);
             
             if (voiceChannel is null)
             {
-                await this.Context.Interaction.RespondAsync("Ты не в войсе");
+                await Context.Interaction.RespondAsync("Ты не в войсе");
                 return;
             }
             
             _playingService.Skip(voiceChannel.Id);
             
-            await this.Context.Interaction.RespondAsync("Скипнул");
+            await Context.Interaction.RespondAsync("Скипнул");
         }
         catch (Exception e)
         {
@@ -148,19 +148,19 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         try
         {
-            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(this.Context.User);
+            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(Context.User);
             
             if (voiceChannel is null)
             {
-                await this.Context.Interaction.RespondAsync("Ты не в войсе");
+                await Context.Interaction.RespondAsync("Ты не в войсе");
                 return;
             }
             
-            await _voiceChannelManager.Leave(this.Context.Guild.Id, voiceChannel);
+            await _voiceChannelManager.Leave(Context.Guild.Id, voiceChannel);
             
             _playingService.Stop(voiceChannel.Id);
             
-            await this.Context.Interaction.RespondAsync("Бб лохи");
+            await Context.Interaction.RespondAsync("Бб лохи");
         }
         catch (Exception e)
         {
@@ -173,20 +173,20 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
     {
         try
         {
-            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(this.Context.User);
+            IVoiceChannel? voiceChannel = _voiceChannelManager.GetVoiceChannel(Context.User);
             
             if (voiceChannel is null)
             {
-                await this.Context.Interaction.RespondAsync("Ты не в войсе");
+                await Context.Interaction.RespondAsync("Ты не в войсе");
                 return;
             }
             
             string[] songs = _playingService.GetQueue(voiceChannel.Id);
             string songListMessage = _responseService.BuildSongListMessage(songs);
             
-            await this.Context.Interaction.RespondAsync("Ща покажу");
+            await Context.Interaction.RespondAsync("Ща покажу");
             
-            await this.Context.Channel.SendMessageAsync(songListMessage);
+            await Context.Channel.SendMessageAsync(songListMessage);
         }
         catch (Exception e)
         {
@@ -201,18 +201,18 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
         {
             if (page <= 0)
             {
-                await this.Context.Interaction.RespondAsync("Дебил?");
+                await Context.Interaction.RespondAsync("Дебил?");
                 return;
             }
             
             int pageAmount = _fileSystemService.GetPageAmount();
             if (page > pageAmount)
             {
-                await this.Context.Interaction.RespondAsync($"Всего {pageAmount} страниц");
+                await Context.Interaction.RespondAsync($"Всего {pageAmount} страниц");
                 return;
             }
             
-            await this.Context.Interaction.RespondAsync("Ща будет");
+            await Context.Interaction.RespondAsync("Ща будет");
             
             string[] songNames = _fileSystemService.GetPage(page, pageAmount);
             
@@ -220,7 +220,7 @@ public class SlashCommands : InteractionModuleBase<SocketInteractionContext>
             
             MessageComponent messageComponent = CommandHelper.BuildButtons(page, pageAmount);
             
-            await this.Context.Channel.SendMessageAsync(songListMessage, components: messageComponent);
+            await Context.Channel.SendMessageAsync(songListMessage, components: messageComponent);
         }
         catch (Exception e)
         {

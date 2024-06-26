@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using Discord;
 using Discord.Audio;
 using Discord.WebSocket;
-using Mp3Player.Services.Interfaces;
 
-namespace Mp3Player.Services;
+namespace SpotifyCaster.Services.VoiceChannelManager;
 
 public class VoiceChannelManager : IVoiceChannelManager
 {
-    private static readonly Dictionary<ulong, ulong> s_guildsToChannels = new();
+    private static readonly ConcurrentDictionary<ulong, ulong> s_guildsToChannels = new();
     
     public async Task<IAudioClient> Enter(ulong guildId, IVoiceChannel voiceChannel)
     {
@@ -46,7 +43,7 @@ public class VoiceChannelManager : IVoiceChannelManager
         }
         catch (Exception e)
         {
-            s_guildsToChannels.Add(guildId, channelId);
+            s_guildsToChannels.TryAdd(guildId, channelId);
             
             Console.WriteLine(e);
             throw;

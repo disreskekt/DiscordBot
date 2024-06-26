@@ -11,7 +11,7 @@ public class VoiceChannelStatus
 
     public bool FindAndChangeActualChannel(ulong channelId)
     {
-        if (this.IsConnectedTo.TryGetValue(channelId, out bool isConnected))
+        if (IsConnectedTo.TryGetValue(channelId, out bool isConnected))
         {
             if (isConnected)
             {
@@ -19,28 +19,28 @@ public class VoiceChannelStatus
             }
             else
             {
-                KeyValuePair<ulong, bool> kvp = this.IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
+                KeyValuePair<ulong, bool> kvp = IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
 
                 if (!kvp.Equals(new KeyValuePair<ulong, bool>()))
                 {
-                    this.IsConnectedTo[kvp.Key] = false;
+                    IsConnectedTo[kvp.Key] = false;
                 }
                 
-                this.IsConnectedTo[channelId] = true;
+                IsConnectedTo[channelId] = true;
 
                 return true;
             }
         }
         else
         {
-            KeyValuePair<ulong, bool> kvp = this.IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
+            KeyValuePair<ulong, bool> kvp = IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
             
             if (!kvp.Equals(new KeyValuePair<ulong, bool>()))
             {
-                this.IsConnectedTo[kvp.Key] = false;
+                IsConnectedTo[kvp.Key] = false;
             }
             
-            this.IsConnectedTo.Add(channelId, true);
+            IsConnectedTo.Add(channelId, true);
 
             return true;
         }
@@ -48,7 +48,7 @@ public class VoiceChannelStatus
 
     public ulong? FindActualChannel()
     {
-        KeyValuePair<ulong, bool> kvp = this.IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
+        KeyValuePair<ulong, bool> kvp = IsConnectedTo.FirstOrDefault(kvp => kvp.Value == true);
         
         if (!kvp.Equals(new KeyValuePair<ulong, bool>()))
         {
@@ -60,6 +60,6 @@ public class VoiceChannelStatus
 
     public void LeaveChannel(ulong channelId)
     {
-        this.IsConnectedTo[channelId] = false;
+        IsConnectedTo[channelId] = false;
     }
 }

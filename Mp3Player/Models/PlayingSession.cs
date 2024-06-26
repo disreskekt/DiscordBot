@@ -8,7 +8,7 @@ namespace Mp3Player.Models;
 
 public class PlayingSession
 {
-    private Queue<string> _queue;
+    private readonly Queue<string> _queue;
     public ulong Id { get; set; }
     public bool Skip { get; set; }
     public bool Stop { get; set; }
@@ -18,11 +18,11 @@ public class PlayingSession
     public PlayingSession(IAudioClient audioClient, ulong id)
     {
         _queue = new Queue<string>();
-        this.Id = id;
-        this.Skip = false;
-        this.Stop = false;
-        this.PlayingStatus = false;
-        this.AudioClient = audioClient;
+        Id = id;
+        Skip = false;
+        Stop = false;
+        PlayingStatus = false;
+        AudioClient = audioClient;
     }
     
     public void Enqueue(PlayingSession playingSession, string songName, Action<PlayingSession> tryToPlayAction)

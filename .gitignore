@@ -3,3 +3,4 @@
 .idea
 */appsettings.json
 .vs
+*appsettings.*.json

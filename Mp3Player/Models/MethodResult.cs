@@ -10,14 +10,14 @@ public class MethodResult
     
     public MethodResult(bool isSuccess, string? error = null)
     {
-        this.IsSuccess = isSuccess;
-        this.Error = error;
+        IsSuccess = isSuccess;
+        Error = error;
     }
     
     public MethodResult(object? resultObject)
     {
-        this.Result = resultObject;
-        this.IsSuccess = true;
+        Result = resultObject;
+        IsSuccess = true;
     }
     
     public static MethodResult Success()

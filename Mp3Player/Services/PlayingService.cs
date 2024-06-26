@@ -13,7 +13,7 @@ namespace Mp3Player.Services;
 public class PlayingService : IPlayingService
 {
     private readonly FileSystemConfig _fileSystemConfig;
-    private static readonly Dictionary<ulong, PlayingSession> _playingSessions = new Dictionary<ulong, PlayingSession>();
+    private static readonly Dictionary<ulong, PlayingSession> s_playingSessions = new();
 
     public PlayingService(IOptions<FileSystemConfig> fileSystemConfig)
     {
@@ -22,7 +22,7 @@ public class PlayingService : IPlayingService
     
     public void CreateSession(ulong channelId, IAudioClient audioClient)
     {
-        if (_playingSessions.TryAdd(channelId, new PlayingSession(audioClient, channelId)))
+        if (s_playingSessions.TryAdd(channelId, new PlayingSession(audioClient, channelId)))
         {
             return;
         }
@@ -39,7 +39,7 @@ public class PlayingService : IPlayingService
     
     public bool IsSessionExist(ulong channelId)
     {
-        return _playingSessions.TryGetValue(channelId, out PlayingSession? _);
+        return s_playingSessions.TryGetValue(channelId, out PlayingSession? _);
     }
     
     public void Skip(ulong channelId)
@@ -73,7 +73,7 @@ public class PlayingService : IPlayingService
     
     private PlayingSession GetPlayingSession(ulong channelId)
     {
-        if (_playingSessions.TryGetValue(channelId, out PlayingSession? value))
+        if (s_playingSessions.TryGetValue(channelId, out PlayingSession? value))
         {
             return value;
         }
@@ -123,7 +123,7 @@ public class PlayingService : IPlayingService
 
                 if (playingSession.Stop)
                 {
-                    _playingSessions.Remove(playingSession.Id);
+                    s_playingSessions.Remove(playingSession.Id);
                     return;
                 }
                 //todo stop and pause
