@@ -3,6 +3,7 @@ using NAudio.Wave;
 
 namespace SpotifyCaster.Services.RestreamingService;
 
+[Obsolete]
 public class RestreamingService : IRestreamingService
 {
     private readonly IAudioClient _audioClient;

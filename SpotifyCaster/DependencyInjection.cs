@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using SpotifyCaster.BackgroundServices;
 using SpotifyCaster.Configs;
 using SpotifyCaster.Services;
+using SpotifyCaster.Services.AudioStreamer;
 using SpotifyCaster.Services.VoiceChannelManager;
 using DiscordConfig = SpotifyCaster.Configs.DiscordConfig;
 
@@ -15,7 +16,6 @@ public static class DependencyInjection
     public static IServiceCollection AddConfigs(this IServiceCollection services, ConfigurationManager configuration)
     {
         services.Configure<DiscordConfig>(configuration.GetSection("Discord"));
-        services.Configure<SpotifyConfig>(configuration.GetSection("Spotify"));
 
         return services;
     }
@@ -23,7 +23,6 @@ public static class DependencyInjection
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
         services.AddHostedService<DiscordBotInitService>();
-        // services.AddHostedService<SpotifyInitService>();
 
         return services;
     }
@@ -41,7 +40,7 @@ public static class DependencyInjection
         services.AddSingleton<CommandService>();
         services.AddSingleton<CommandHandler>();
 
-        services.AddSingleton<SpotifyService>();
+        services.AddSingleton<IAudioStreamer, AudioStreamer>();
 
         services.AddSingleton<IVoiceChannelManager, VoiceChannelManager>();
 
