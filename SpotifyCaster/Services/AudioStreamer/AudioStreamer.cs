@@ -88,7 +88,7 @@ public class AudioStreamer : IAudioStreamer, IDisposable
         catch (Exception e)
         {
             Console.WriteLine($"Метод SendAudioToDiscordAsync отвалился по причине: {e.Message}");
-            await targetStream.DisposeAsync();
+            // await targetStream.DisposeAsync();
         }
     }
 
